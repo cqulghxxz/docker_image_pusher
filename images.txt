@@ -1,4 +1,4 @@
-#支持指定架构,如:arm64
+#1、A区虚拟机Linux-centos7.9服务器master01-amd64架构:
 --platform=linux/amd64 flannel/flannel:v0.24.0
 --platform=linux/amd64 flannel/flannel-cni-plugin:v1.2.0
 --platform=linux/amd64 goharbor/nginx-photon:v2.2.3
@@ -21,3 +21,11 @@
 --platform=linux/amd64 goharbor/harbor-core:v1.8.3
 --platform=linux/amd64 goharbor/harbor-portal:v1.8.3
 --platform=linux/amd64 goharbor/harbor-db:v1.8.3
+#2、虎溪校区华为Linux-centos7.9服务器Node07-arm64架构:
+--platform=linux/arm64 grafana/grafana:10.4.2
+--platform=linux/arm64 flannel/flannel:v0.24.0
+--platform=linux/arm64 flannel/flannel-cni-plugin:v1.2.0
+--platform=linux/arm64 k8s.gcr.io/kube-proxy:v1.20.5
+--platform=linux/arm64 prom/node-exporter:v1.1.2
+--platform=linux/arm64 k8s.gcr.io/pause:3.2
+--platform=linux/arm64 prom/prometheus:v2.27.1
