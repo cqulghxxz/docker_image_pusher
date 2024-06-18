@@ -1,4 +1,4 @@
-#支持指定架构
+#支持指定架构,如:arm64
 --platform=linux/amd64 flannel/flannel:v0.24.0
 --platform=linux/amd64 flannel/flannel-cni-plugin:v1.2.0
 --platform=linux/amd64 goharbor/nginx-photon:v2.2.3
