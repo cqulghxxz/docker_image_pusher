@@ -1,31 +1,8 @@
 #1、A区虚拟机Linux-centos7.9服务器master01-amd64架构:
---platform=linux/amd64 flannel/flannel:v0.24.0
---platform=linux/amd64 flannel/flannel-cni-plugin:v1.2.0
---platform=linux/amd64 goharbor/nginx-photon:v2.2.3
---platform=linux/amd64 bitnami/metrics-server:0.5.0
---platform=linux/amd64 k8s.gcr.io/kube-proxy:v1.20.5
---platform=linux/amd64 k8s.gcr.io/kube-controller-manager:v1.20.5
---platform=linux/amd64 k8s.gcr.io/kube-scheduler:v1.20.5
---platform=linux/amd64 k8s.gcr.io/kube-apiserver:v1.20.5
---platform=linux/amd64 kubernetesui/dashboard:v2.1.0
---platform=linux/amd64 kubernetesui/metrics-scraper:v1.0.6
---platform=linux/amd64 k8s.gcr.io/etcd:3.4.13-0
---platform=linux/amd64 k8s.gcr.io/coredns:1.7.0
---platform=linux/amd64 quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0
---platform=linux/amd64 k8s.gcr.io/pause:3.2
---platform=linux/amd64 goharbor/redis-photon:v1.8.3
---platform=linux/amd64 goharbor/harbor-registryctl:v1.8.3
---platform=linux/amd64 goharbor/registry-photon:v2.7.1-patch-2819-v1.8.3
---platform=linux/amd64 goharbor/harbor-log:v1.8.3
---platform=linux/amd64 goharbor/harbor-jobservice:v1.8.3
---platform=linux/amd64 goharbor/harbor-core:v1.8.3
---platform=linux/amd64 goharbor/harbor-portal:v1.8.3
---platform=linux/amd64 goharbor/harbor-db:v1.8.3
-#2、虎溪校区华为Linux-centos7.9服务器Node07-arm64架构:
---platform=linux/arm64 grafana/grafana:10.4.2
---platform=linux/arm64 flannel/flannel:v0.24.0
---platform=linux/arm64 flannel/flannel-cni-plugin:v1.2.0
---platform=linux/arm64 k8s.gcr.io/kube-proxy:v1.20.5
---platform=linux/arm64 prom/node-exporter:v1.1.2
---platform=linux/arm64 k8s.gcr.io/pause:3.2
---platform=linux/arm64 prom/prometheus:v2.27.1
+--platform=linux/amd64 swr.cn-east-2.myhuaweicloud.com/kuboard/etcd-host:3.4.16-2
+--platform=linux/amd64 swr.cn-east-2.myhuaweicloud.com/kuboard/kuboard:v3
+--platform=linux/amd64 swr.cn-east-2.myhuaweicloud.com/kuboard/kuboard:v3
+
+--platform=linux/arm64 swr.cn-east-2.myhuaweicloud.com/kuboard/etcd-host:3.4.16-2
+--platform=linux/arm64 swr.cn-east-2.myhuaweicloud.com/kuboard/kuboard:v3
+--platform=linux/arm64 swr.cn-east-2.myhuaweicloud.com/kuboard/kuboard:v3
