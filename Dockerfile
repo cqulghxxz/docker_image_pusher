@@ -2,7 +2,7 @@
 FROM quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0 AS base
 
 # 构建阶段：编译 Nginx 1.28.0
-FROM debian:bullseye-slim AS builder
+FROM registry.cn-hangzhou.aliyuncs.com/library/debian:bullseye-slim AS builder
 
 # 安装编译依赖（修复语法错误）
 RUN apt-get update && apt-get install -y --no-install-recommends \
