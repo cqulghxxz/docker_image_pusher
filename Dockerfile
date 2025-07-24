@@ -1,28 +1,67 @@
-# 基础镜像：使用官方 nginx-ingress-controller 0.30.0
+# 阶段1：基础信息采集
 FROM quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0 AS base
+USER root
+RUN mkdir -p /tmp/build-info && \
+    which nginx > /tmp/build-info/nginx-path.txt && \
+    nginx -v 2>&1 > /tmp/build-info/nginx-version.txt && \
+    echo "/etc/nginx/nginx.conf" > /tmp/build-info/nginx-conf-path.txt && \
+    echo "/usr/lib/nginx/modules" > /tmp/build-info/nginx-modules-path.txt && \
+    id -u > /tmp/build-info/original-user-id.txt && \
+    id -g > /tmp/build-info/original-group-id.txt && \
+    mkdir -p /usr/lib/nginx/modules && \
+    chmod -R 755 /usr/lib/nginx
+USER 101
 
-# 构建阶段：编译 Nginx 1.28.0
-FROM debian:bullseye-slim AS builder
+# 阶段2：编译环境准备（使用国内多镜像源轮询）
+FROM debian:bullseye-slim AS build-env
+RUN set -e; \
+    for mirror in mirrors.tuna.tsinghua.edu.cn mirrors.huaweicloud.com mirrors.aliyun.com; do \
+      echo "尝试使用镜像源: $mirror"; \
+      sed -i "s|deb.debian.org|$mirror|g" /etc/apt/sources.list; \
+      sed -i "s|security.debian.org|$mirror|g" /etc/apt/sources.list; \
+      if apt-get update -o Acquire::Retries=3; then \
+        if apt-get install -y --no-install-recommends \
+            ca-certificates \
+            build-essential \
+            wget \
+            libpcre3-dev \
+            zlib1g-dev \
+            libssl-dev \
+            libxslt1-dev \
+            libgd-dev \
+            libgeoip-dev; then \
+          rm -rf /var/lib/apt/lists/*; \
+          break; \
+        fi; \
+      fi; \
+      echo "镜像源 $mirror 失败，尝试下一个..."; \
+      sleep 3; \
+    done
 
-# 安装编译依赖（修复语法错误）
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    build-essential \
-    wget \
-    libpcre3-dev \
-    libz-dev \
-    libssl-dev \
-    libxslt1-dev \
-    libgd-dev \
-    libgeoip-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# 下载并编译 Nginx 1.28.0
+# 阶段3：Nginx源码下载（多CDN源重试）
+FROM build-env AS source
 WORKDIR /build
-RUN wget -O nginx.tar.gz https://nginx.org/download/nginx-1.28.0.tar.gz && \
-    tar -zxf nginx.tar.gz && \
-    cd nginx-1.28.0 && \
-    ./configure \
+RUN set -e; \
+    for url in \
+      "https://nginx.org/download/nginx-1.28.0.tar.gz" \
+      "https://mirrors.tencent.com/nginx/nginx-1.28.0.tar.gz" \
+      "https://mirrors.tuna.tsinghua.edu.cn/nginx/nginx-1.28.0.tar.gz"; \
+    do \
+      echo "尝试从 $url 下载"; \
+      if wget --retry-connrefused --waitretry=10 --tries=3 -O nginx.tar.gz "$url"; then \
+        tar -zxf nginx.tar.gz && \
+        if [ -d "nginx-1.28.0" ]; then break; fi; \
+      fi; \
+      echo "下载失败，尝试备用源..."; \
+      rm -f nginx.tar.gz; \
+    done && \
+    [ -d "nginx-1.28.0" ] || { echo "所有源码下载源均失败"; exit 1; }
+
+# 阶段4：Nginx编译构建
+FROM build-env AS builder
+COPY --from=source /build/nginx-1.28.0 /build/nginx-1.28.0
+WORKDIR /build/nginx-1.28.0
+RUN ./configure \
         --prefix=/etc/nginx \
         --sbin-path=/usr/sbin/nginx \
         --modules-path=/usr/lib/nginx/modules \
@@ -64,18 +103,32 @@ RUN wget -O nginx.tar.gz https://nginx.org/download/nginx-1.28.0.tar.gz && \
         --with-compat \
         --with-pcre-jit && \
     make -j$(nproc) && \
-    make install
+    make install && \
+    /usr/sbin/nginx -v 2>&1 | grep -oE 'nginx/[0-9.]+' | cut -d/ -f2 > /tmp/nginx-build-version.txt
 
-# 最终镜像：替换原 Nginx 二进制文件
+# 阶段5：最终镜像组装
 FROM base
+USER root
 
-# 复制编译好的 Nginx 1.28.0
+# 直接覆盖安装
 COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=builder /etc/nginx /etc/nginx
 COPY --from=builder /usr/lib/nginx /usr/lib/nginx
 
-# 验证版本
-RUN nginx -v
+# 版本验证
+RUN set -ex; \
+    rm -f /usr/bin/nginx; \
+    ln -s /usr/sbin/nginx /usr/bin/nginx; \
+    NGINX_VERSION=$(/usr/sbin/nginx -v 2>&1 | grep -oE 'nginx/[0-9.]+' | cut -d/ -f2); \
+    [ "$NGINX_VERSION" = "1.28.0" ] || { \
+      echo "版本验证失败: $NGINX_VERSION"; \
+      echo "编译版本: $(cat /tmp/nginx-build-version.txt 2>/dev/null || echo '未知')"; \
+      exit 1; \
+    }; \
+    echo "Nginx 1.28.0 升级成功"; \
+    rm -rf /tmp/build-info
 
-# 保留原控制器启动命令
+USER 101
+HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
+    CMD [ -e /var/run/nginx.pid ] || exit 1
 CMD ["nginx-ingress-controller"]
