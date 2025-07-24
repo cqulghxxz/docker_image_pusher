@@ -4,7 +4,7 @@ FROM quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0 AS ba
 # 构建阶段：编译 Nginx 1.28.0
 FROM debian:bullseye-slim AS builder
 
-# 安装编译依赖（确保所有必要包都已安装）
+# 安装编译依赖（确保所有命令以 RUN 开头）
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \      # 确保 HTTPS 证书验证正常
     build-essential \      # 包含 gcc、make 等基础编译工具
@@ -22,7 +22,7 @@ WORKDIR /build
 RUN wget -O nginx.tar.gz https://nginx.org/download/nginx-1.28.0.tar.gz && \
     tar -zxf nginx.tar.gz && \
     cd nginx-1.28.0 && \
-    # 复制原控制器的 Nginx 编译参数（关键！确保模块兼容）
+    # 配置编译参数
     ./configure \
         --prefix=/etc/nginx \
         --sbin-path=/usr/sbin/nginx \
