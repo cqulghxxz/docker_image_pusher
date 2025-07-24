@@ -1,1 +1,1 @@
-From registry.k8s.io/ingress-nginx/controller:v1.13.0@sha256:dc75a7baec7a3b827a5d7ab0acd10ab507904c7dad692365b3e3b596eca1afd2
+From rancher/nginx-ingress-controller:v1.12.4-hardened2
