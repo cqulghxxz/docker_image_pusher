@@ -1,19 +1,21 @@
-# 基础镜像：使用 nginx-ingress-controller 0.30.0 作为底包
+# 基础镜像：使用官方 nginx-ingress-controller 0.30.0
 FROM quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.30.0 AS base
 
 # 构建阶段：编译 Nginx 1.28.0
 FROM debian:bullseye-slim AS builder
 
-# 安装编译依赖
+# 安装编译依赖（确保所有必要包都已安装）
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libc6-dev \
-    make \
-    wget \
-    libpcre3-dev \
-    zlib1g-dev \
-    libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates \      # 确保 HTTPS 证书验证正常
+    build-essential \      # 包含 gcc、make 等基础编译工具
+    wget \                 # 下载源码
+    libpcre3-dev \         # PCRE 正则表达式支持
+    zlib1g-dev \           # 压缩模块支持
+    libssl-dev \           # SSL/TLS 模块支持
+    libxslt1-dev \         # XSLT 模块支持
+    libgd-dev \            # 图像过滤模块支持
+    libgeoip-dev \         # GeoIP 模块支持
+    && rm -rf /var/lib/apt/lists/*  # 清理缓存以减小镜像体积
 
 # 下载并编译 Nginx 1.28.0（保持与原控制器兼容的模块）
 WORKDIR /build
@@ -62,7 +64,7 @@ RUN wget -O nginx.tar.gz https://nginx.org/download/nginx-1.28.0.tar.gz && \
         --with-http_slice_module \
         --with-compat \
         --with-pcre-jit && \
-    make -j$(nproc) && \
+    make -j$(nproc) && \  # 多线程编译，加速构建
     make install
 
 # 最终镜像：替换原 Nginx 二进制文件
