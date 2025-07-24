@@ -1,2 +1,1 @@
-# 阶段1：基础信息采集
-FROM quay.io/kubernetes-ingress-controller/nginx-ingress-controller:1.8.1
+From registry.k8s.io/ingress-nginx/controller:v1.13.0@sha256:dc75a7baec7a3b827a5d7ab0acd10ab507904c7dad692365b3e3b596eca1afd2
